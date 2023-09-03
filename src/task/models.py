@@ -5,7 +5,10 @@ from pydantic import (
 )
 
 
-class Task(BaseModel):
+class TaskBase(BaseModel):
     event_type: str
-    event_time: datetime.datetime = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc))
     meta: dict | None
+
+
+class Task(TaskBase):
+    event_time: datetime.datetime = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc))

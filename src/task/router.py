@@ -6,8 +6,11 @@ from fastapi import (
     APIRouter,
     Depends
 )
-from src.task.models import Task
-from src.task.queue import KafkaClient
+from src.task.models import (
+    Task,
+    TaskBase
+)
+from src.task.handler import Handler
 from src.task.container import TaskContainer
 
 
@@ -17,15 +20,31 @@ task_router = APIRouter()
 @task_router.get("/task")
 @inject
 async def get_task(
-    handler: KafkaClient = Depends(Provide[TaskContainer.kafka_client])
+    handler: Handler = Depends(Provide[TaskContainer.handler])
 ) -> Task:
     return handler.get_task()
+
+
+@task_router.put("/task")
+@inject
+async def put_task(
+    handler: Handler = Depends(Provide[TaskContainer.handler])
+) -> Task:
+    return handler.put_task()
 
 
 @task_router.post("/task")
 @inject
 async def post_task(
-    task: Task,
-    handler: KafkaClient = Depends(Provide[TaskContainer.kafka_client])
+    task: TaskBase,
+    handler: Handler = Depends(Provide[TaskContainer.handler])
 ) -> None:
     handler.produce_task(task=task)
+
+
+@task_router.get("/task/all")
+@inject
+async def get_all_tasks(
+    handler: Handler = Depends(Provide[TaskContainer.handler])
+) -> list[Task]:
+    return handler.get_all_tasks()

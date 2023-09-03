@@ -16,14 +16,23 @@ from src.task.container import TaskContainer
 class Application(containers.DeclarativeContainer):
     config = providers.Container(Configuration)
 
-    kafka_consumer = providers.Singleton(
+    kafka_consumer_get = providers.Factory(
         KafkaConsumer,
         config.kafka.task_topic(),
+        group_id=config.kafka.group_id(),
         bootstrap_servers=config.kafka.bootstrap_servers(),
         value_deserializer=lambda m: json.loads(m.decode("utf-8")),
+        enable_auto_commit=False,
+        auto_offset_reset="earliest"
+    )
+    # Define a Kafka consumer factory for the PUT method
+    kafka_consumer_put = providers.Factory(
+        KafkaConsumer,
+        config.kafka.task_topic(),
         group_id=config.kafka.group_id(),
-        consumer_timeout_ms=config.kafka.consumer_timeout(),
-        enable_auto_commit=True,
+        bootstrap_servers=config.kafka.bootstrap_servers(),
+        value_deserializer=lambda m: json.loads(m.decode("utf-8")),
+        enable_auto_commit=False,
         auto_offset_reset="earliest"
     )
     kafka_producer: KafkaProducer = providers.Singleton(
@@ -36,6 +45,7 @@ class Application(containers.DeclarativeContainer):
     task = providers.Container(
         TaskContainer,
         kafka_producer=kafka_producer,
-        kafka_consumer=kafka_consumer,
+        kafka_consumer_get=kafka_consumer_get,
+        kafka_consumer_put=kafka_consumer_put,
         topic_name=config.kafka.task_topic()
     )
