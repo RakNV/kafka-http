@@ -30,3 +30,4 @@ class TaskContainer(containers.DeclarativeContainer):
         consumer_client=consumer_client,
         producer_client=producer_client,
     )
+

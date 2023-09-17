@@ -1,4 +1,3 @@
-from fastapi.exceptions import HTTPException
 from .models import (
     Task,
     TaskBase
@@ -7,6 +6,8 @@ from .queue import (
     ConsumerClient, 
     ProducerClient
 )
+from .decorator import handle_error
+from .errors import QUEUE_IS_EMPTY_ERROR
 
 
 class Handler:
@@ -18,24 +19,19 @@ class Handler:
         self.__consumer_client = consumer_client
         self.__producer_client = producer_client
 
+    @handle_error(
+        beware=IndexError, 
+        panic=QUEUE_IS_EMPTY_ERROR
+    )
     def get_task(self) -> Task | None:
-        try:
-            task = self.__consumer_client.get_task()
-            return task
-        except IndexError:
-            raise HTTPException(
-                status_code=404,
-                detail={"message": "Task queue is empty", "code": 404}
-            )
+            return self.__consumer_client.get_task()
 
+    @handle_error(
+        beware=IndexError,
+        panic=QUEUE_IS_EMPTY_ERROR
+    )
     def put_task(self) -> Task:
-        try:
-            return self.__consumer_client.put_task()
-        except IndexError:
-            raise HTTPException(
-                status_code=404,
-                detail={"message": "Task queue is empty", "code": 404}
-                ) 
+        return self.__consumer_client.put_task()
 
     def produce_task(self, task: TaskBase) -> None:
         return self.__producer_client.produce_task(
@@ -45,5 +41,3 @@ class Handler:
             )
         )
 
-    def get_all_tasks(self) -> list[Task]:
-        return self.__consumer_client.get_all_tasks()

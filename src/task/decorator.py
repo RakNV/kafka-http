@@ -1,8 +1,7 @@
-from fastapi import HTTPException
-from loguru import logger
-from itertools import chain
 from typing import Callable
 from functools import wraps
+
+from fastapi import HTTPException
 
 from .models import Task
 
@@ -16,21 +15,18 @@ def remember(queue_instance: list):
 
         @wraps(func)
         def inner(*args, **kwargs):
-            try:
-                result = func(*args, **kwargs)
-                task = None
-                if kwargs.get("task"):
-                    task = kwargs["task"]
-                for arg in args:
-                    if isinstance(arg, Task):
-                        task = arg
-                        break
-                if not task:
-                    raise ValueError
-                queue_instance.append(task)
-                return result
-            except ValueError:
-                logger.error("Task not found")
+            result = func(*args, **kwargs)
+            task = None
+            if kwargs.get("task"):
+                task = kwargs["task"]
+            for arg in args:
+                if isinstance(arg, Task):
+                    task = arg
+                    break
+            if not task:
+                raise IndexError
+            queue_instance.append(task)
+            return result
         return inner
     
     return wrapper
@@ -51,3 +47,17 @@ def sync(queue_instance: list):
         return inner
     return wrapper
             
+
+def handle_error(beware: type[Exception], panic: HTTPException):
+
+    def wrapper(func: Callable):
+
+        @wraps(func)
+        def inner(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except beware:  
+                raise panic
+        return inner
+    return wrapper
+
