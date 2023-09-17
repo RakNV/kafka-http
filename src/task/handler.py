@@ -1,33 +1,49 @@
+from fastapi.exceptions import HTTPException
 from .models import (
     Task,
     TaskBase
 )
 from .queue import (
-    ConsumerClient,
+    ConsumerClient, 
     ProducerClient
 )
 
 
 class Handler:
 
-    def __init__(
-        self,
-        consumer_client_get: ConsumerClient,
-        consumer_client_put: ConsumerClient,
-        producer_client: ProducerClient
+    def __init__( self,
+        consumer_client: ConsumerClient,
+        producer_client: ProducerClient,
     ) -> None:
-        self.__consumer_client_get = consumer_client_get
-        self.__consumer_client_put = consumer_client_put
+        self.__consumer_client = consumer_client
         self.__producer_client = producer_client
 
-    def get_task(self) -> Task:
-        return self.__consumer_client_get.get_task(delete=False)
+    def get_task(self) -> Task | None:
+        try:
+            task = self.__consumer_client.get_task()
+            return task
+        except IndexError:
+            raise HTTPException(
+                status_code=404,
+                detail={"message": "Task queue is empty", "code": 404}
+            )
 
     def put_task(self) -> Task:
-        return self.__consumer_client_put.get_task(delete=True)
+        try:
+            return self.__consumer_client.put_task()
+        except IndexError:
+            raise HTTPException(
+                status_code=404,
+                detail={"message": "Task queue is empty", "code": 404}
+                ) 
 
     def produce_task(self, task: TaskBase) -> None:
-        return self.__producer_client.produce_task(task=Task(**task.dict()))
+        return self.__producer_client.produce_task(
+            task=Task(
+                event_type=task.event_type,
+                meta=task.meta
+            )
+        )
 
     def get_all_tasks(self) -> list[Task]:
-        return self.__consumer_client_get.get_all_tasks()
+        return self.__consumer_client.get_all_tasks()

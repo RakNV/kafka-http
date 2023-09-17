@@ -13,8 +13,7 @@ class TaskContainer(containers.DeclarativeContainer):
     wiring_config = containers.WiringConfiguration(modules=[".router"])
 
     kafka_producer = providers.Dependency()
-    kafka_consumer_get = providers.Dependency()
-    kafka_consumer_put = providers.Dependency()
+    kafka_consumer = providers.Dependency()
     topic_name = providers.Dependency()
 
     producer_client = providers.Singleton(
@@ -22,17 +21,12 @@ class TaskContainer(containers.DeclarativeContainer):
         producer=kafka_producer,
         topic_name=topic_name
     )
-    consumer_client_get = providers.Factory(
+    consumer_client = providers.Singleton(
         ConsumerClient,
-        consumer=kafka_consumer_get
-    )
-    consumer_client_put = providers.Factory(
-        ConsumerClient,
-        consumer=kafka_consumer_put
+        consumer=kafka_consumer
     )
     handler = providers.Factory(
         Handler,
-        consumer_client_get=consumer_client_get,
-        consumer_client_put=consumer_client_put,
-        producer_client=producer_client
+        consumer_client=consumer_client,
+        producer_client=producer_client,
     )
