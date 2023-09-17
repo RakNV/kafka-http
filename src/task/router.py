@@ -6,6 +6,7 @@ from fastapi import (
     APIRouter,
     Depends
 )
+from loguru import logger
 from src.task.models import (
     Task,
     TaskBase
@@ -17,11 +18,11 @@ from src.task.container import TaskContainer
 task_router = APIRouter()
 
 
-@task_router.get("/task")
+@task_router.get("/task/peek")
 @inject
 async def get_task(
     handler: Handler = Depends(Provide[TaskContainer.handler])
-) -> Task:
+) -> Task | None:
     return handler.get_task()
 
 
@@ -39,6 +40,7 @@ async def post_task(
     task: TaskBase,
     handler: Handler = Depends(Provide[TaskContainer.handler])
 ) -> None:
+    logger.debug(type(task))
     handler.produce_task(task=task)
 
 

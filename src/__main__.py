@@ -30,7 +30,7 @@ fastapi_app.include_router(
 def run() -> None:
     uvicorn.run(
         "src.__main__:fastapi_app",
-        host=application_container.config.service.address(),  # type: ignore
+        host=application_container.config.service.address(), # type: ignore
         port=application_container.config.service.port(),  # type: ignore
         loop="uvloop",
     )
