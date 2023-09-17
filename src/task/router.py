@@ -43,10 +43,3 @@ async def post_task(
     logger.debug(type(task))
     handler.produce_task(task=task)
 
-
-@task_router.get("/task/all")
-@inject
-async def get_all_tasks(
-    handler: Handler = Depends(Provide[TaskContainer.handler])
-) -> list[Task]:
-    return handler.get_all_tasks()

@@ -49,12 +49,3 @@ class ConsumerClient:
         self.__consumer.commit()  # Commit the offset to advance to the next message
         return Task(**message.value)
 
-    def get_all_tasks(self) -> list[Task]:
-        return [Task(**message.value) for message in self.__consumer]
-
-    def __get_task(self, delete: bool) -> Task:
-        logger.debug("Attempt to get task from consumer")
-        message = next(self.__consumer)
-        if delete:
-            self.__consumer.commit()
-        return Task(**message.value)
