@@ -27,7 +27,8 @@ class ProducerClient:
 
     def __handle_task(self, task: Task) -> None:
         logger.debug(
-            f"Sending event {task.json()} to {self.__topic_name} Kafka Topic...")
+            f"Sending event {task.json()} to {self.__topic_name} Kafka Topic..."
+        )
         self.__producer.send(self.__topic_name, json.loads(task.json()))
         logger.debug("Succeeded sending event")
 
@@ -40,11 +41,11 @@ class ConsumerClient:
     ) -> None:
         self.__consumer = consumer
 
-    def get_task(self) -> Task | None:
-        return _IN_MEMORY_QUEUE[0]
+    def get_task(self, queue_instance=_IN_MEMORY_QUEUE) -> Task | None:
+        return queue_instance[0]
 
     @sync(queue_instance=_IN_MEMORY_QUEUE)
-    def put_task(self):
+    def put_task(self) -> Task:
         message = next(self.__consumer)
         self.__consumer.commit()  # Commit the offset to advance to the next message
         return Task(**message.value)
